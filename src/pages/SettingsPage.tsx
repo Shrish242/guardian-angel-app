@@ -3,6 +3,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { useSettings } from '@/hooks/useSettings';
 import { useCheckIn } from '@/hooks/useCheckIn';
 import { useContacts } from '@/hooks/useContacts';
+import { useEmailJS } from '@/hooks/useEmailJS';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -27,18 +28,51 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Clock, Bell, User, MessageSquare, Trash2, Shield } from 'lucide-react';
+import { Clock, Bell, User, MessageSquare, Trash2, Shield, Mail, Send, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const { settings, updateSettings, resetSettings } = useSettings();
-  const { clearData } = useCheckIn(settings.checkInFrequencyDays, settings.gracePeriodMinutes);
+  const { clearData, checkInData } = useCheckIn(settings.checkInFrequencyDays, settings.gracePeriodMinutes);
   const { contacts } = useContacts();
+  const [isSendingTest, setIsSendingTest] = useState(false);
+  
+  const emailJS = useEmailJS({
+    serviceId: settings.emailjsServiceId,
+    templateId: settings.emailjsTemplateId,
+    publicKey: settings.emailjsPublicKey,
+  });
 
   const handleClearAllData = () => {
     clearData();
     resetSettings();
     window.localStorage.removeItem('wellness-app-contacts');
     window.location.reload();
+  };
+
+  const handleSendTestEmail = async () => {
+    if (contacts.length === 0) {
+      toast.error('Add at least one contact first');
+      return;
+    }
+    
+    const favoriteContact = contacts.find(c => c.isFavorite) || contacts[0];
+    setIsSendingTest(true);
+    
+    const result = await emailJS.sendTestEmail(
+      favoriteContact.email,
+      favoriteContact.name,
+      settings
+    );
+    
+    setIsSendingTest(false);
+    
+    if (result.success) {
+      toast.success(`Test email sent to ${favoriteContact.email}`);
+    } else {
+      toast.error(`Failed: ${result.error}`);
+    }
   };
 
   const frequencyOptions = [
@@ -204,6 +238,82 @@ export default function SettingsPage() {
           </div>
         </SettingSection>
 
+        {/* EmailJS Configuration */}
+        <SettingSection icon={Mail} title="Email Setup (EmailJS)">
+          <div className="space-y-4">
+            <div className="p-3 bg-muted/50 rounded-md">
+              <p className="text-xs text-muted-foreground mb-2">
+                EmailJS lets you send emails from this app. It's free for up to 200 emails/month.
+              </p>
+              <a
+                href="https://www.emailjs.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+              >
+                Set up EmailJS account <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="serviceId">Service ID</Label>
+              <Input
+                id="serviceId"
+                value={settings.emailjsServiceId}
+                onChange={(e) => updateSettings({ emailjsServiceId: e.target.value })}
+                placeholder="e.g., service_abc123"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="templateId">Template ID</Label>
+              <Input
+                id="templateId"
+                value={settings.emailjsTemplateId}
+                onChange={(e) => updateSettings({ emailjsTemplateId: e.target.value })}
+                placeholder="e.g., template_xyz789"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="publicKey">Public Key</Label>
+              <Input
+                id="publicKey"
+                value={settings.emailjsPublicKey}
+                onChange={(e) => updateSettings({ emailjsPublicKey: e.target.value })}
+                placeholder="e.g., user_abcdef123456"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              {emailJS.isConfigured ? (
+                <div className="flex items-center gap-1 text-xs text-green-600">
+                  <CheckCircle className="w-3 h-3" />
+                  <span>Configured</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-xs text-amber-600">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Not configured</span>
+                </div>
+              )}
+            </div>
+
+            {emailJS.isConfigured && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSendTestEmail}
+                disabled={isSendingTest || contacts.length === 0}
+                className="w-full"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {isSendingTest ? 'Sending...' : 'Send Test Email'}
+              </Button>
+            )}
+          </div>
+        </SettingSection>
+
         {/* Protection Status */}
         <SettingSection icon={Shield} title="Status">
           <div className="space-y-2">
@@ -221,6 +331,12 @@ export default function SettingsPage() {
               <span className="text-muted-foreground">Grace period</span>
               <span className="font-medium">
                 {gracePeriodOptions.find(o => o.value === settings.gracePeriodMinutes)?.label}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Email alerts</span>
+              <span className={`font-medium ${emailJS.isConfigured ? 'text-green-600' : 'text-amber-600'}`}>
+                {emailJS.isConfigured ? 'Ready' : 'Not configured'}
               </span>
             </div>
           </div>

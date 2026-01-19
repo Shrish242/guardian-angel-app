@@ -6,8 +6,11 @@ import { BottomNav } from '@/components/BottomNav';
 import { useCheckIn } from '@/hooks/useCheckIn';
 import { useSettings } from '@/hooks/useSettings';
 import { useContacts } from '@/hooks/useContacts';
-import { Shield, Users } from 'lucide-react';
+import { useEmailJS } from '@/hooks/useEmailJS';
+import { Shield, Users, AlertTriangle, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function HomePage() {
   const { settings } = useSettings();
@@ -17,6 +20,36 @@ export default function HomePage() {
   );
   const { contacts, getFavoriteContact } = useContacts();
   const favoriteContact = getFavoriteContact();
+  const [alertSent, setAlertSent] = useState(false);
+  const alertSentRef = useRef(false);
+
+  const emailJS = useEmailJS({
+    serviceId: settings.emailjsServiceId,
+    templateId: settings.emailjsTemplateId,
+    publicKey: settings.emailjsPublicKey,
+  });
+
+  // Check for overdue status and send alerts
+  useEffect(() => {
+    if (status === 'overdue' && emailJS.isConfigured && contacts.length > 0 && !alertSentRef.current) {
+      alertSentRef.current = true;
+      setAlertSent(true);
+      
+      emailJS.sendEmergencyAlert(contacts, settings, checkInData.lastCheckIn).then((result) => {
+        if (result.success) {
+          toast.success('Emergency alerts sent to your contacts');
+        } else {
+          toast.error('Some alerts failed to send');
+        }
+      });
+    }
+    
+    // Reset alert flag when status changes from overdue
+    if (status !== 'overdue') {
+      alertSentRef.current = false;
+      setAlertSent(false);
+    }
+  }, [status, emailJS, contacts, settings, checkInData.lastCheckIn]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -109,22 +142,45 @@ export default function HomePage() {
           <div className="bg-card rounded-lg p-4 border border-border shadow-sm">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                contacts.length > 0 ? 'bg-success/20' : 'bg-muted'
+                emailJS.isConfigured && contacts.length > 0 ? 'bg-success/20' : 'bg-muted'
               }`}>
                 <Shield className={`w-5 h-5 ${
-                  contacts.length > 0 ? 'text-success' : 'text-muted-foreground'
+                  emailJS.isConfigured && contacts.length > 0 ? 'text-success' : 'text-muted-foreground'
                 }`} />
               </div>
               <div className="flex-1">
                 <h3 className="font-medium text-foreground">Protection Status</h3>
                 <p className="text-sm text-muted-foreground">
-                  {contacts.length > 0
-                    ? 'Your contacts will be notified if needed'
-                    : 'Add contacts to enable alerts'}
+                  {!emailJS.isConfigured
+                    ? 'Set up email in Settings'
+                    : contacts.length > 0
+                      ? 'Your contacts will be notified if needed'
+                      : 'Add contacts to enable alerts'}
                 </p>
               </div>
             </div>
           </div>
+
+          {/* Alert sent indicator */}
+          {status === 'overdue' && alertSent && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-destructive/10 border border-destructive/20 rounded-lg p-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-destructive" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-destructive">Alerts Sent</h3>
+                  <p className="text-sm text-destructive/80">
+                    Your contacts have been notified
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       </main>
 
