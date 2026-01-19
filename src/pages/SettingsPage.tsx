@@ -4,12 +4,12 @@ import { useSettings } from '@/hooks/useSettings';
 import { useCheckIn } from '@/hooks/useCheckIn';
 import { useContacts } from '@/hooks/useContacts';
 import { useEmailJS } from '@/hooks/useEmailJS';
+import { EMAILJS_CONFIG } from '@/config/emailjs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Clock, Bell, User, MessageSquare, Trash2, Shield, Mail, Send, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
+import { Clock, Bell, User, MessageSquare, Trash2, Shield, Send, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -38,11 +38,7 @@ export default function SettingsPage() {
   const { contacts } = useContacts();
   const [isSendingTest, setIsSendingTest] = useState(false);
   
-  const emailJS = useEmailJS({
-    serviceId: settings.emailjsServiceId,
-    templateId: settings.emailjsTemplateId,
-    publicKey: settings.emailjsPublicKey,
-  });
+  const emailJS = useEmailJS(EMAILJS_CONFIG);
 
   const handleClearAllData = () => {
     clearData();
@@ -238,78 +234,30 @@ export default function SettingsPage() {
           </div>
         </SettingSection>
 
-        {/* EmailJS Configuration */}
-        <SettingSection icon={Mail} title="Email Setup (EmailJS)">
+        {/* Email Alerts */}
+        <SettingSection icon={Shield} title="Email Alerts">
           <div className="space-y-4">
-            <div className="p-3 bg-muted/50 rounded-md">
-              <p className="text-xs text-muted-foreground mb-2">
-                EmailJS lets you send emails from this app. It's free for up to 200 emails/month.
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-600" />
+              <span className="text-sm text-green-600 font-medium">Email alerts are configured</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Emergency emails will be sent to your trusted contacts if you miss a check-in.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSendTestEmail}
+              disabled={isSendingTest || contacts.length === 0}
+              className="w-full"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {isSendingTest ? 'Sending...' : 'Send Test Email'}
+            </Button>
+            {contacts.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Add at least one contact to send a test email.
               </p>
-              <a
-                href="https://www.emailjs.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-              >
-                Set up EmailJS account <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="serviceId">Service ID</Label>
-              <Input
-                id="serviceId"
-                value={settings.emailjsServiceId}
-                onChange={(e) => updateSettings({ emailjsServiceId: e.target.value })}
-                placeholder="e.g., service_abc123"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="templateId">Template ID</Label>
-              <Input
-                id="templateId"
-                value={settings.emailjsTemplateId}
-                onChange={(e) => updateSettings({ emailjsTemplateId: e.target.value })}
-                placeholder="e.g., template_xyz789"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="publicKey">Public Key</Label>
-              <Input
-                id="publicKey"
-                value={settings.emailjsPublicKey}
-                onChange={(e) => updateSettings({ emailjsPublicKey: e.target.value })}
-                placeholder="e.g., user_abcdef123456"
-              />
-            </div>
-
-            <div className="flex items-center gap-2 pt-2">
-              {emailJS.isConfigured ? (
-                <div className="flex items-center gap-1 text-xs text-green-600">
-                  <CheckCircle className="w-3 h-3" />
-                  <span>Configured</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 text-xs text-amber-600">
-                  <AlertCircle className="w-3 h-3" />
-                  <span>Not configured</span>
-                </div>
-              )}
-            </div>
-
-            {emailJS.isConfigured && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSendTestEmail}
-                disabled={isSendingTest || contacts.length === 0}
-                className="w-full"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                {isSendingTest ? 'Sending...' : 'Send Test Email'}
-              </Button>
             )}
           </div>
         </SettingSection>
@@ -335,9 +283,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Email alerts</span>
-              <span className={`font-medium ${emailJS.isConfigured ? 'text-green-600' : 'text-amber-600'}`}>
-                {emailJS.isConfigured ? 'Ready' : 'Not configured'}
-              </span>
+              <span className="font-medium text-green-600">Ready</span>
             </div>
           </div>
         </SettingSection>

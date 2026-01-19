@@ -7,7 +7,8 @@ import { useCheckIn } from '@/hooks/useCheckIn';
 import { useSettings } from '@/hooks/useSettings';
 import { useContacts } from '@/hooks/useContacts';
 import { useEmailJS } from '@/hooks/useEmailJS';
-import { Shield, Users, AlertTriangle, Mail } from 'lucide-react';
+import { EMAILJS_CONFIG } from '@/config/emailjs';
+import { Shield, Users, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -23,11 +24,7 @@ export default function HomePage() {
   const [alertSent, setAlertSent] = useState(false);
   const alertSentRef = useRef(false);
 
-  const emailJS = useEmailJS({
-    serviceId: settings.emailjsServiceId,
-    templateId: settings.emailjsTemplateId,
-    publicKey: settings.emailjsPublicKey,
-  });
+  const emailJS = useEmailJS(EMAILJS_CONFIG);
 
   // Check for overdue status and send alerts
   useEffect(() => {
@@ -142,20 +139,18 @@ export default function HomePage() {
           <div className="bg-card rounded-lg p-4 border border-border shadow-sm">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                emailJS.isConfigured && contacts.length > 0 ? 'bg-success/20' : 'bg-muted'
+                contacts.length > 0 ? 'bg-success/20' : 'bg-muted'
               }`}>
                 <Shield className={`w-5 h-5 ${
-                  emailJS.isConfigured && contacts.length > 0 ? 'text-success' : 'text-muted-foreground'
+                  contacts.length > 0 ? 'text-success' : 'text-muted-foreground'
                 }`} />
               </div>
               <div className="flex-1">
                 <h3 className="font-medium text-foreground">Protection Status</h3>
                 <p className="text-sm text-muted-foreground">
-                  {!emailJS.isConfigured
-                    ? 'Set up email in Settings'
-                    : contacts.length > 0
-                      ? 'Your contacts will be notified if needed'
-                      : 'Add contacts to enable alerts'}
+                  {contacts.length > 0
+                    ? 'Your contacts will be notified if needed'
+                    : 'Add contacts to enable alerts'}
                 </p>
               </div>
             </div>
