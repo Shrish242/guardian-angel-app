@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.c18540eb752444a59183c46015b51b86",
+  "appName": "Wellness Check-in",
+  "webDir": "dist",
+  "server": {
+    "url": "https://c18540eb-7524-44a5-9183-c46015b51b86.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
