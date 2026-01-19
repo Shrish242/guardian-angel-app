@@ -14,6 +14,10 @@ export interface AppSettings {
   gracePeriodMinutes: number;
   userName: string;
   emergencyMessage: string;
+  // EmailJS configuration
+  emailjsServiceId: string;
+  emailjsTemplateId: string;
+  emailjsPublicKey: string;
 }
 
 export interface CheckInData {
@@ -29,6 +33,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   gracePeriodMinutes: 60,
   userName: '',
   emergencyMessage: 'This is an automated message. I haven\'t checked in to my wellness app within the expected timeframe. Please reach out to make sure I\'m okay.',
+  emailjsServiceId: '',
+  emailjsTemplateId: '',
+  emailjsPublicKey: '',
 };
 
 export const DEFAULT_CHECK_IN_DATA: CheckInData = {
