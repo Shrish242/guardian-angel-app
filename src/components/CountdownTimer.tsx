@@ -1,27 +1,40 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-
-interface TimeRemaining {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  total: number;
-}
+import { differenceInSeconds } from 'date-fns';
 
 interface CountdownTimerProps {
-  timeRemaining: TimeRemaining | null;
+  deadline: string | null;
   status: 'never' | 'ok' | 'soon' | 'urgent' | 'overdue';
 }
 
-export function CountdownTimer({ timeRemaining, status }: CountdownTimerProps) {
-  const [, setTick] = useState(0);
+export function CountdownTimer({ deadline, status }: CountdownTimerProps) {
+  const [now, setNow] = useState(() => Date.now());
 
-  // Force re-render every second for live countdown
+  // Update every second for smooth countdown
   useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 1000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Calculate time remaining on every tick
+  const timeRemaining = useMemo(() => {
+    if (!deadline) return null;
+
+    const deadlineDate = new Date(deadline);
+    const seconds = differenceInSeconds(deadlineDate, now);
+
+    if (seconds <= 0) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
+    }
+
+    return {
+      days: Math.floor(seconds / (24 * 60 * 60)),
+      hours: Math.floor((seconds % (24 * 60 * 60)) / (60 * 60)),
+      minutes: Math.floor((seconds % (60 * 60)) / 60),
+      seconds: seconds % 60,
+      total: seconds,
+    };
+  }, [deadline, now]);
 
   if (!timeRemaining) {
     return (
@@ -63,8 +76,9 @@ export function CountdownTimer({ timeRemaining, status }: CountdownTimerProps) {
     <div className="flex flex-col items-center">
       <motion.div
         key={value}
-        initial={{ opacity: 0.5, y: -5 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0.8, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
         className="bg-card rounded-lg px-4 py-3 min-w-[70px] shadow-sm border border-border"
       >
         <span className="text-3xl font-semibold text-foreground tabular-nums">

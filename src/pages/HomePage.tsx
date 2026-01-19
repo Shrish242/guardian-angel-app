@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 
 export default function HomePage() {
   const { settings } = useSettings();
-  const { performCheckIn, status, timeRemaining, checkInData } = useCheckIn(
+  const { performCheckIn, status, checkInData } = useCheckIn(
     settings.checkInFrequencyDays,
     settings.gracePeriodMinutes
   );
@@ -104,7 +104,7 @@ export default function HomePage() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-10 w-full max-w-sm"
         >
-          <CountdownTimer timeRemaining={timeRemaining} status={status} />
+          <CountdownTimer deadline={checkInData.nextDeadline} status={status} />
         </motion.div>
 
         {/* Status cards */}
