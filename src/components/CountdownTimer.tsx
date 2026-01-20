@@ -79,13 +79,13 @@ export function CountdownTimer({ deadline, status }: CountdownTimerProps) {
         initial={{ opacity: 0.8, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
-        className="bg-card rounded-lg px-4 py-3 min-w-[70px] shadow-sm border border-border"
+        className="bg-card rounded-lg px-2 py-2 sm:px-4 sm:py-3 min-w-[48px] sm:min-w-[70px] shadow-sm border border-border"
       >
-        <span className="text-3xl font-semibold text-foreground tabular-nums">
+        <span className="text-lg sm:text-3xl font-semibold text-foreground tabular-nums">
           {String(value).padStart(2, '0')}
         </span>
       </motion.div>
-      <span className="text-xs text-muted-foreground mt-1.5 uppercase tracking-wide">
+      <span className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-1.5 uppercase tracking-wide">
         {label}
       </span>
     </div>
@@ -97,13 +97,13 @@ export function CountdownTimer({ deadline, status }: CountdownTimerProps) {
         {getStatusMessage()}
       </p>
       
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-1 sm:gap-2">
         <TimeBlock value={timeRemaining.days} label="Days" />
-        <span className="text-2xl text-muted-foreground mt-[-20px]">:</span>
+        <span className="text-lg sm:text-2xl text-muted-foreground mt-[-16px] sm:mt-[-20px]">:</span>
         <TimeBlock value={timeRemaining.hours} label="Hours" />
-        <span className="text-2xl text-muted-foreground mt-[-20px]">:</span>
+        <span className="text-lg sm:text-2xl text-muted-foreground mt-[-16px] sm:mt-[-20px]">:</span>
         <TimeBlock value={timeRemaining.minutes} label="Mins" />
-        <span className="text-2xl text-muted-foreground mt-[-20px]">:</span>
+        <span className="text-lg sm:text-2xl text-muted-foreground mt-[-16px] sm:mt-[-20px]">:</span>
         <TimeBlock value={timeRemaining.seconds} label="Secs" />
       </div>
     </div>
