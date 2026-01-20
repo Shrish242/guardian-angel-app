@@ -29,7 +29,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Clock, Bell, User, MessageSquare, Trash2, Shield, Send, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -37,8 +37,14 @@ export default function SettingsPage() {
   const { clearData, checkInData } = useCheckIn(settings.checkInFrequencyDays, settings.gracePeriodMinutes);
   const { contacts } = useContacts();
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const [localName, setLocalName] = useState(settings.userName);
   
   const emailJS = useEmailJS(EMAILJS_CONFIG);
+
+  // Sync local name when settings change externally
+  useEffect(() => {
+    setLocalName(settings.userName);
+  }, [settings.userName]);
 
   const handleClearAllData = () => {
     clearData();
@@ -131,8 +137,9 @@ export default function SettingsPage() {
             <Label htmlFor="name">Your Name</Label>
             <Input
               id="name"
-              value={settings.userName}
-              onChange={(e) => updateSettings({ userName: e.target.value })}
+              value={localName}
+              onChange={(e) => setLocalName(e.target.value)}
+              onBlur={() => updateSettings({ userName: localName })}
               placeholder="Enter your name"
             />
             <p className="text-xs text-muted-foreground">
