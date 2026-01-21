@@ -105,7 +105,7 @@ export default function SettingsPage() {
         >
           <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
           <p className="text-muted-foreground mt-1">
-            Customize your wellness check-in
+            Customize your Pulse settings
           </p>
         </motion.div>
       </header>
@@ -313,7 +313,7 @@ export default function SettingsPage() {
           transition={{ delay: 0.3 }}
           className="text-center py-6 text-xs text-muted-foreground"
         >
-          <p>Wellness Check-in App</p>
+          <p>Pulse App</p>
           <p className="mt-1">Your data stays on your device</p>
         </motion.div>
       </main>

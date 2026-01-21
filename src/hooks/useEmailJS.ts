@@ -31,10 +31,10 @@ export function useEmailJS(config: EmailJSConfig) {
             {
               to_name: contact.name,
               to_email: contact.email,
-              from_name: settings.userName || 'Wellness App User',
+              from_name: settings.userName || 'Pulse User',
               user_name: settings.userName || 'A loved one',
               relationship: contact.relationship,
-              message: settings.emergencyMessage,
+              message: `${settings.userName || 'Someone'} sent you a message. This is a message from the Pulse app. Please check upon them at your earliest convenience.`,
               last_checkin: lastCheckIn
                 ? new Date(lastCheckIn).toLocaleString()
                 : 'Never',
@@ -75,10 +75,10 @@ export function useEmailJS(config: EmailJSConfig) {
           {
             to_name: toName,
             to_email: toEmail,
-            from_name: settings.userName || 'Wellness App User',
+            from_name: settings.userName || 'Pulse User',
             user_name: settings.userName || 'A loved one',
             relationship: 'Test',
-            message: '🧪 This is a TEST email from the Wellness Check-in App. Your emergency alerts are configured correctly!',
+            message: `${settings.userName || 'Someone'} sent you a message. This is a message from the Pulse app. Please check upon them at your earliest convenience.`,
             last_checkin: new Date().toLocaleString(),
           },
           config.publicKey
