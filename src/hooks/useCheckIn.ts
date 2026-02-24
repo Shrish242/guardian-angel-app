@@ -47,28 +47,6 @@ export function useCheckIn(frequencyDays: number, gracePeriodMinutes: number) {
     return 'ok' as const;
   }, [checkInData, frequencyDays, gracePeriodMinutes]);
 
-  const timeRemaining = useMemo(() => {
-    if (!checkInData.nextDeadline) {
-      return null;
-    }
-
-    const deadline = new Date(checkInData.nextDeadline);
-    const now = new Date();
-    const seconds = differenceInSeconds(deadline, now);
-
-    if (seconds <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
-    }
-
-    return {
-      days: Math.floor(seconds / (24 * 60 * 60)),
-      hours: Math.floor((seconds % (24 * 60 * 60)) / (60 * 60)),
-      minutes: Math.floor((seconds % (60 * 60)) / 60),
-      seconds: seconds % 60,
-      total: seconds,
-    };
-  }, [checkInData.nextDeadline]);
-
   const clearData = useCallback(() => {
     setCheckInData(DEFAULT_CHECK_IN_DATA);
   }, [setCheckInData]);
@@ -77,7 +55,6 @@ export function useCheckIn(frequencyDays: number, gracePeriodMinutes: number) {
     checkInData,
     performCheckIn,
     status,
-    timeRemaining,
     clearData,
   };
 }

@@ -1,7 +1,7 @@
 // EmailJS Configuration
-// These are public keys designed for frontend use - safe to include in code
+// Reads from environment variables (set in .env file)
 export const EMAILJS_CONFIG = {
-  serviceId: 'service_sjuwafv',
-  templateId: 'template_uhhsk8n',
-  publicKey: '0oXfai4f82ha1ReEe',
+  serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || '',
+  templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '',
+  publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '',
 } as const;

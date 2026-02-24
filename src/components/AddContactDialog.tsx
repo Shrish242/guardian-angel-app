@@ -34,42 +34,62 @@ export function AddContactDialog({
 }: AddContactDialogProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [relationship, setRelationship] = useState('');
   const [category, setCategory] = useState<Contact['category']>('family');
+  const [emailError, setEmailError] = useState('');
+
+  const validateEmail = (value: string) => {
+    if (!value.trim()) {
+      setEmailError('');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+  };
 
   useEffect(() => {
     if (editingContact) {
       setName(editingContact.name);
       setEmail(editingContact.email);
+      setPhone(editingContact.phone || '');
       setRelationship(editingContact.relationship);
       setCategory(editingContact.category);
+      setEmailError('');
     } else {
       setName('');
       setEmail('');
+      setPhone('');
       setRelationship('');
       setCategory('family');
+      setEmailError('');
     }
   }, [editingContact, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (editingContact && onUpdate) {
-      onUpdate(editingContact.id, { name, email, relationship, category });
+      onUpdate(editingContact.id, { name, email, phone: phone || undefined, relationship, category });
     } else {
       onSave({
         name,
         email,
+        phone: phone || undefined,
         relationship,
         category,
         isFavorite: false,
       });
     }
-    
+
     onOpenChange(false);
   };
 
-  const isValid = name.trim() && email.trim() && relationship.trim();
+  const isValid = name.trim() && email.trim() && relationship.trim() && !emailError;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -98,9 +118,26 @@ export function AddContactDialog({
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                validateEmail(e.target.value);
+              }}
               placeholder="john@example.com"
               required
+            />
+            {emailError && (
+              <p className="text-xs text-destructive">{emailError}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone <span className="text-muted-foreground text-xs">(optional)</span></Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+1 234 567 8900"
             />
           </div>
 
@@ -125,6 +162,7 @@ export function AddContactDialog({
                 <SelectItem value="immediate">Immediate Support</SelectItem>
                 <SelectItem value="family">Family & Friends</SelectItem>
                 <SelectItem value="care">Care Team</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

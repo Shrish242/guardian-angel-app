@@ -2,6 +2,7 @@ export interface Contact {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   relationship: string;
   isFavorite: boolean;
   category: 'immediate' | 'family' | 'care';

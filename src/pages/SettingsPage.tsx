@@ -29,9 +29,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Clock, Bell, User, MessageSquare, Trash2, Shield, Send, CheckCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Clock, Bell, User, MessageSquare, Trash2, Shield, Send, CheckCircle, Moon, Sun, Download, Upload } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { useTheme } from 'next-themes';
 
 export default function SettingsPage() {
   const { settings, updateSettings, resetSettings } = useSettings();
@@ -39,7 +40,9 @@ export default function SettingsPage() {
   const { contacts } = useContacts();
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [localName, setLocalName] = useState(settings.userName);
-  
+  const { theme, setTheme } = useTheme();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const emailJS = useEmailJS(EMAILJS_CONFIG);
 
   // Sync local name when settings change externally
@@ -54,23 +57,62 @@ export default function SettingsPage() {
     window.location.reload();
   };
 
+  const handleExportData = () => {
+    const data = {
+      settings: JSON.parse(window.localStorage.getItem('wellness-app-settings') || '{}'),
+      contacts: JSON.parse(window.localStorage.getItem('wellness-app-contacts') || '[]'),
+      checkIn: JSON.parse(window.localStorage.getItem('wellness-app-checkin') || '{}'),
+      exportedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pulse-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Data exported successfully');
+  };
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        if (data.settings) window.localStorage.setItem('wellness-app-settings', JSON.stringify(data.settings));
+        if (data.contacts) window.localStorage.setItem('wellness-app-contacts', JSON.stringify(data.contacts));
+        if (data.checkIn) window.localStorage.setItem('wellness-app-checkin', JSON.stringify(data.checkIn));
+        toast.success('Data imported successfully. Reloading...');
+        setTimeout(() => window.location.reload(), 1000);
+      } catch {
+        toast.error('Invalid backup file');
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so the same file can be re-imported
+    event.target.value = '';
+  };
+
   const handleSendTestEmail = async () => {
     if (contacts.length === 0) {
       toast.error('Add at least one contact first');
       return;
     }
-    
+
     const favoriteContact = contacts.find(c => c.isFavorite) || contacts[0];
     setIsSendingTest(true);
-    
+
     const result = await emailJS.sendTestEmail(
       favoriteContact.email,
       favoriteContact.name,
       settings
     );
-    
+
     setIsSendingTest(false);
-    
+
     if (result.success) {
       toast.success(`Test email sent to ${favoriteContact.email}`);
     } else {
@@ -123,8 +165,24 @@ export default function SettingsPage() {
               placeholder="Enter your name"
             />
             <p className="text-xs text-muted-foreground">
-              Used in greetings and emergency messages
+              Used in emergency messages
             </p>
+          </div>
+        </SettingSection>
+
+        {/* Appearance */}
+        <SettingSection icon={theme === 'dark' ? Moon : Sun} title="Appearance">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Dark Mode</Label>
+              <p className="text-xs text-muted-foreground">
+                Switch between light and dark themes
+              </p>
+            </div>
+            <Switch
+              checked={theme === 'dark'}
+              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+            />
           </div>
         </SettingSection>
 
@@ -316,6 +374,42 @@ export default function SettingsPage() {
           <p>Pulse App</p>
           <p className="mt-1">Your data stays on your device</p>
         </motion.div>
+
+        {/* Data Export/Import */}
+        <SettingSection icon={Download} title="Backup & Restore">
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Export your data to a file for backup, or import a previous backup.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={handleExportData}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Import
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={handleImportData}
+              />
+            </div>
+          </div>
+        </SettingSection>
       </main>
 
       <BottomNav />

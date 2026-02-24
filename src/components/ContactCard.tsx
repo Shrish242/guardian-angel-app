@@ -1,7 +1,18 @@
 import { motion } from 'framer-motion';
-import { Star, Mail, Trash2, Edit2 } from 'lucide-react';
+import { Star, Mail, Phone, Trash2, Edit2 } from 'lucide-react';
 import { Contact } from '@/types/app';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface ContactCardProps {
   contact: Contact;
@@ -42,6 +53,12 @@ export function ContactCard({ contact, onSetFavorite, onEdit, onDelete }: Contac
             <Mail className="w-3.5 h-3.5" />
             <span>{contact.email}</span>
           </div>
+          {contact.phone && (
+            <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
+              <Phone className="w-3.5 h-3.5" />
+              <span>{contact.phone}</span>
+            </div>
+          )}
           <span className="inline-block mt-2 text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">
             {getCategoryLabel(contact.category)}
           </span>
@@ -67,16 +84,35 @@ export function ContactCard({ contact, onSetFavorite, onEdit, onDelete }: Contac
           >
             <Edit2 className="w-4 h-4 text-muted-foreground" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => onDelete(contact.id)}
-          >
-            <Trash2 className="w-4 h-4 text-destructive" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+              >
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete {contact.name}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently remove {contact.name} from your trusted circle.
+                  They will no longer receive emergency alerts.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(contact.id)}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </motion.div>
   );
 }
+
